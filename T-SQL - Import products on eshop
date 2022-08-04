@@ -1,0 +1,30 @@
+use P5HPBP1;
+
+declare @date date;
+set @date = '20220804'; -- todays date
+
+SELECT
+dd.PRODUCTCODE 'code',
+'' 'pairCode',
+wn.PRODUCTNAME + ' - č. ' + CAST(CAST(substring(convert(varchar, cal.booknumber), 5, 4) AS INT) AS VARCHAR(5)) + '/' + left(cal.BOOKNUMBER, 4) 'name',
+replace(sysadm.sf_ScsGetCopyPrice(dd.PRODUCTCODE, 'ALAP', 'CZ', 'CZK', dd.PUBLICATIONDATE), '.', ',') 'price',
+MAX(SQ.QUANTITY) as 'stock',
+'availabilityOutOfStock' =
+	CASE
+		WHEN dd.PRODUCTCODE in (700, 2340) THEN 'Na objednávku'
+		ELSE 'Vyprodáno'
+	END,
+'Skladem' as 'availabilityInStock',
+'freeShipping' =
+	CASE
+		WHEN sysadm.sf_ScsGetCopyPrice(dd.PRODUCTCODE, 'ALAP', 'CZ', 'CZK', dd.PUBLICATIONDATE) > 100 THEN '1'
+		ELSE '0'
+	END,
+'visible' as 'productVisibility',
+'' as 'purchasePrice',
+'ean' =
+	CASE
+		WHEN patindex('% %',iss.BARCODENUMBEROUT) = 0 THEN iss.BARCODENUMBEROUT
+		ELSE LEFT(iss.BARCODENUMBEROUT,patindex('% %',iss.BARCODENUMBEROUT)-1)
+	END,
+1 as 'ilustracni-fotografieFlagActive'
